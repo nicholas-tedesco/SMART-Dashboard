@@ -9,8 +9,8 @@
 # application goals:
 
   # 1) Randomize patient to initial treatment, and log results
-  # 2) ...
-  # 3) ...
+  # 2) Track medication administration
+  # 3) Track symptoms, response status
 
 
 ## packages ----

@@ -18,7 +18,18 @@
 library(shiny)
 library(dplyr)
 library(shinythemes)
+library(googlesheets4)
 
+
+## google sheets
+
+SHEET_ID <- 'https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0'
+
+options(gargle_oauth_cache = ".secrets")
+gs4_auth()
+list.files(".secrets/")
+gs4_deauth()
+gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
 
 ## helper functions ----
 
@@ -55,31 +66,18 @@ library(shinythemes)
 
   # saving and loading data
 
-  outputDir <- "C:/Users/nick_/Documents/Work/U-M/Berinstein/responses"
-
   saveData <- function(data) {
-    # Create a unique file name
-    fileName <- sprintf("%s_%s.csv", as.integer(Sys.time()), digest::digest(data))
-    # Write the file to the local system
-    write.csv(
-      x = data,
-      file = file.path(outputDir, fileName), 
-      row.names = FALSE, quote = TRUE
-    )
+    # The data must be a dataframe rather than a named vector
+    data <- data %>% as.list() %>% data.frame()
+    # Add the data as a new row
+    sheet_append(SHEET_ID, data)
   }
 
   loadData <- function() {
-    # Read all the files into a list
-    files <- list.files(outputDir, full.names = TRUE)
-    if(length(files) == 0) {
-      return(NULL)
-    } else {
-      data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
-      # Concatenate all data together into one data.frame
-      data <- data.frame(do.call(rbind, data)) %>% arrange(desc(assignment_time))
-      return(data)
-    }
-  }
+    # Read the data
+    data <- data.frame(read_sheet(SHEET_ID))
+    data %>% arrange(desc(assignment_time))
+}
 
 
 ## define pages of application ----

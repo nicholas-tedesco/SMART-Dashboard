@@ -101,8 +101,6 @@ library(shinythemes)
       # show current data
       mainPanel(
         DT::dataTableOutput('responses')
-      # error message
-      
       )
     )
   )

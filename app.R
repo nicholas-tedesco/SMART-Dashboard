@@ -1,19 +1,22 @@
-## README ----
+# README ----------------------------------------------------
+# ===========================================================
 
-# app.R
-# clinical trial dashboard
+## app.R
+## clinical trial dashboard
 
-# init NT 03/29
-# updated NT 03/30
+## init NT 03/29
+## updated NT 04/03
 
-# application goals:
+## application goals:
 
   # 1) Randomize patient to initial treatment, and log results
   # 2) Track medication administration
   # 3) Track symptoms, response status
 
 
-## packages ----
+
+# packages --------------------------------------------------
+# ===========================================================
 
 library(shiny)
 library(dplyr)
@@ -21,21 +24,40 @@ library(shinythemes)
 library(googlesheets4)
 
 
-## google sheets
 
-SHEET_ID <- 'https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0'
+# google sheets ---------------------------------------------
+# ===========================================================
 
-options(gargle_oauth_cache = ".secrets")
-gs4_auth()
-list.files(".secrets/")
-gs4_deauth()
-gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
+  ## authentication
+  ## --------------
 
-## helper functions ----
+  options(gargle_oauth_cache = ".secrets")
+  gs4_auth()
+  list.files(".secrets/")
+  gs4_deauth()
+  gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
+  
+  ## sheet IDs
+  ## --------------
 
-  # treatment assignment
+  treatment_sheet <- 'https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0'
+  medication_sheet <- ''
+
+  
+  
+# helper functions -------------------------------------------
+# ============================================================
+
+  ## treatment assignment
+  ## --------------------
 
   randomizer <- function(num, treat1){
+    
+    # README ----
+    
+    # Purpose of function is to assign given patient to first or second stage of treatment. 
+    # Second stage of treatment depends on first stage. 
+    
     # first treatment
     if(num == 1) {
       choices1 <- c('IV methylprednisolone (30mg twice daily)', 'upadacitinib (30mg twice daily)', 'IV methylprednisolone (30mg twice daily) + upadacitinib (45mg daily)')
@@ -54,6 +76,9 @@ gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
       }
     }
   }
+  
+  ## collect results of randomization
+  ## --------------------------------
 
   random_to_df <- function(id, num, assign){
     data.frame(
@@ -64,27 +89,30 @@ gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
     )
   }
 
-  # saving and loading data
+  ## save and load data
+  ## ------------------
 
-  saveData <- function(data) {
+  saveData <- function(data, SHEET_ID) {
     # The data must be a dataframe rather than a named vector
     data <- data %>% as.list() %>% data.frame()
     # Add the data as a new row
     sheet_append(SHEET_ID, data)
   }
 
-  loadData <- function() {
+  loadData <- function(SHEET_ID) {
     # Read the data
     data <- data.frame(read_sheet(SHEET_ID))
     data %>% arrange(desc(assignment_time))
 }
 
 
-## define pages of application ----
+# define pages of application --------------------------------
+# ============================================================
 
-  # Page 1: Treatment Assignment and Log
+  ## Page 1: Treatment Assignment and Log
+  ## ------------------------------------
 
-  AA_page <- tabPanel(
+  treat_page <- tabPanel(
     # titles 
     title = 'Randomizer',
     titlePanel('Treatment Assignment'),
@@ -98,13 +126,19 @@ gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
         actionButton('submit', 'Submit')),
       # show current data
       mainPanel(
-        DT::dataTableOutput('responses')
+        DT::dataTableOutput('responses'), 
+        tags$a(href="https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0", "Access data")
       )
     )
   )
+  
+  
+  ## Page 2: Medication Tracker
+  ## --------------------------
 
 
-  ## About Page
+  ## Page 3: Dashboard Guide
+  ## ------------------------
 
   about_page <- tabPanel(
     title = 'Guide',
@@ -115,24 +149,33 @@ gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
   )
 
 
-## define ui ----
+# define ui --------------------------------------------------
+# ============================================================
 
 ui <- navbarPage('Clinical Trial Dashboard',
-  AA_page,
+  treat_page,
   about_page,
   theme = shinytheme(theme = 'flatly')
 )
 
 
-## define server ----
+# define server ----------------------------------------------
+# ============================================================
 
 server <- function(input, output, session) {
   
-  # randomizer (tab 1)
+  ## randomizer (tab 1)
+  ## ------------------
   
     # input from randomizer
     id <- eventReactive(input$submit, input$patient_id)
     num <- eventReactive(input$submit, input$treatment_num)
+    
+    # keep track of treatment 1 for given patient 
+    treat1 <- eventReactive(
+      input$submit, 
+      data.frame(loadData(treatment_sheet)) %>% filter(patient_id == id()) %>% select(assignment)
+    )
     
     # generate data
     formData <- reactive({
@@ -141,24 +184,28 @@ server <- function(input, output, session) {
   
     # save data upon submit click
     observeEvent(input$submit, {
-      saveData(formData())
+      saveData(formData(), treatment_sheet)
     })
     
     # Show the previous responses, updated with current
     output$responses <- DT::renderDataTable({
       input$submit
-      loadData()
+      loadData(treatment_sheet)
     })
     
-    # keep track of treatment 1 for given patient 
-    treat1 <- eventReactive(
-      input$submit, 
-      data.frame(loadData()) %>% filter(patient_id == id()) %>% select(assignment)
-    )
- 
+  ## medications (tab 2)
+  ## -------------------
+    
 }
 
     
-## run application ----
+# run application --------------------------------------------
+# ============================================================
 
 shinyApp(ui = ui, server = server)
+  
+# references -------------------------------------------------
+# ============================================================
+  
+  # https://mgolafshar.github.io/clinical-dashboards/
+  # https://jenthompson.me/2018/02/09/flexdashboards-monitoring/

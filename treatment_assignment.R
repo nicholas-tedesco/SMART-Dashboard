@@ -1,8 +1,7 @@
 # README ----------------------------------------------------
 # ===========================================================
 
-## data.R
-## first treatment assignment for clinical trial dashboard
+## treatment_assignment.R
 
 ## init NT 04/05/2023
 ## updated NT 04/05/2023
@@ -63,16 +62,16 @@ library(dplyr)
   
   
   
-  ## generating data
+  ## create dataset
   ## ------------------
   
-  toDF <- function(cohort_size) {
+  assign_patients <- function(cohort_size) {
     
     # README ----
     # purpose of function is to generate treatment dataset (including stages 1 and 2) for given 
     # cohort size of patients
     
-    data <- data.frame(patient_number = 1:cohort_size) %>%
+    data <- data.frame(patient_id = 1:cohort_size) %>%
       rowwise() %>%
       mutate(
         treatment_one = stage1(), 
@@ -87,7 +86,7 @@ library(dplyr)
 # ============================================================
 
 set.seed(25324)             # set seed for reproducibility
-treatmentData <- toDF(62)
+treatmentData <- assign_patients(62)
 
 write.csv(treatmentData, 'treatmentData.csv')
 

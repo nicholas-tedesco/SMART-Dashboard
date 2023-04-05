@@ -2,7 +2,6 @@
 # ===========================================================
 
 ## app.R
-## clinical trial dashboard
 
 ## init NT 03/29/2023
 ## updated NT 04/05/2023
@@ -20,8 +19,8 @@
 
 library(shiny)
 library(dplyr)
-library(shinythemes)
 library(googlesheets4)
+library(shinythemes)
 library(shinyTime)
 
 
@@ -30,78 +29,61 @@ library(shinyTime)
 # ===========================================================
 
 source('treatment_assignment.R')
-
-
-
-
-
+source('functions.R')
   
   
-# helper functions -------------------------------------------
-# ============================================================
+
+# setup google sheets ---------------------------------------
+# ===========================================================
+
+  ## authentication
+  ## --------------
+
+  options(gargle_oauth_cache = ".secrets")
+  gs4_auth()
+  list.files(".secrets/")
+  gs4_deauth()
+  gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
   
-  ## collect results of randomization
-  ## --------------------------------
+  ## sheet IDs
+  ## --------------
 
-  random_to_df <- function(id, num, assign){
-    data.frame(
-      'patient_id' = id, 
-      'treatment_number' = num, 
-      'assignment' = assign, 
-      'assignment_time' = Sys.time()
-    )
-  }
+  treatment_sheet <- 'https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0'
 
-  ## save and load data
-  ## ------------------
-
-  saveData <- function(data, SHEET_ID) {
-    # The data must be a dataframe rather than a named vector
-    data <- data %>% as.list() %>% data.frame()
-    # Add the data as a new row
-    sheet_append(SHEET_ID, data)
-  }
-
-  loadData <- function(SHEET_ID) {
-    # Read the data
-    data <- data.frame(read_sheet(SHEET_ID))
-    data %>% arrange(desc(assignment_time))
-}
-
+  
 
 # define pages of application --------------------------------
 # ============================================================
 
-  ## Page 1: Treatment Assignment and Log
+  ## Page 1: View Treatment Assignment
   ## ------------------------------------
 
-  treat_page <- tabPanel(
+  treatment_page <- tabPanel(
     # titles 
-    title = 'Randomizer',
-    titlePanel('Treatment Assignment'),
+    title = 'Treatment',
+    titlePanel(h1('Treatment Assignment', align = 'center')), 
+    br(''), 
     # sidebar
     sidebarLayout(
       # randomization
       sidebarPanel(
-        title = 'Randomization Inputs',
+        title = 'Inputs',
         textInput(
           inputId = 'patient_id', 
           label = 'Patient ID'
         ),
-        selectInput(
-          inputId = 'treatment_num', 
-          label = 'Treatment Number', 
-          choices = c('Not Selected' = 0, 'First' = 1, 'Second' = 2)
-        ),
+        checkboxInput(
+          inputId = 'second_treatment', 
+          label = 'Second Treatment?', 
+        ), 
         actionButton(
           inputId = 'submit', 
-          label = 'Submit')
+          label = 'Show Assignment')
       ), 
       # show current data
       mainPanel(
         DT::dataTableOutput('responses'), 
-        tags$a(href="https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0", "Access data"), 
-        DT::dataTableOutput('data')
+        tags$a(href="https://docs.google.com/spreadsheets/d/1feaiNDE7cn_yOnrLjUdxa19aw7P_vX30RNGvwzvikPs/edit?pli=1#gid=1743807854", "View all assignments")
       )
     )
   )
@@ -160,10 +142,10 @@ source('treatment_assignment.R')
 # ============================================================
 
 ui <- navbarPage('Clinical Trial Dashboard',
-  treat_page,
+  treatment_page,
   med_page, 
   about_page,
-  theme = shinytheme(theme = 'flatly')
+  theme = shinytheme(theme = 'spacelab')
 )
 
 
@@ -172,36 +154,29 @@ ui <- navbarPage('Clinical Trial Dashboard',
 
 server <- function(input, output, session) {
   
-  ## randomizer (tab 1)
+  ## treatment reveal (tab 1)
   ## ------------------
   
-    # input from randomizer
+    # input
     id <- eventReactive(input$submit, input$patient_id)
-    num <- eventReactive(input$submit, input$treatment_num)
+    treat2 <- eventReactive(input$submit, input$second_treatment)
     
-    # keep track of treatment 1 for given patient 
-    treat1 <- eventReactive(
-      input$submit, 
-      data.frame(loadData(treatment_sheet)) %>% filter(patient_id == id()) %>% select(assignment)
-    )
-    
-    # generate data
-    formData <- reactive({
-      random_to_df(id(), num(), randomizer(num(), treat1()))
+    # retrieve row of interest
+    getRow <- reactive({
+      reveal_row(id(), treat2())
     })
   
     # save data upon submit click
     observeEvent(input$submit, {
-      saveData(formData(), treatment_sheet)
+      saveData(getRow(), treatment_sheet)
     })
     
     # Show the previous responses, updated with current
     output$responses <- DT::renderDataTable({
       input$submit
-      data.frame(loadData(treatment_sheet)) %>% select(-assignment_time)
+      DT::datatable(orgData(loadData(treatment_sheet)), caption = 'Assignments revealed to-date')
     })
-    
-    output$data <- DT::renderDataTable({treatmentData})
+  
     
   ## medications (tab 2)
   ## -------------------

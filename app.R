@@ -5,11 +5,11 @@
 ## clinical trial dashboard
 
 ## init NT 03/29/2023
-## updated NT 04/04/2023
+## updated NT 04/05/2023
 
-## application goals:
+## goals:
 
-  # 1) Randomize patient to initial treatment, and log results
+  # 1) Reveal patient treatment assignment
   # 2) Track medication administration
   # 3) Track symptoms, response status
 
@@ -22,6 +22,14 @@ library(shiny)
 library(dplyr)
 library(shinythemes)
 library(googlesheets4)
+library(shinyTime)
+
+
+
+# data ------------------------------------------------------
+# ===========================================================
+
+source('treatment_assignment.R')
 
 
 
@@ -47,35 +55,6 @@ library(googlesheets4)
   
 # helper functions -------------------------------------------
 # ============================================================
-
-  ## treatment assignment
-  ## --------------------
-
-  randomizer <- function(num, treat1){
-    
-    # README ----
-    
-    # Purpose of function is to assign given patient to first or second stage of treatment. 
-    # Second stage of treatment depends on first stage. 
-    
-    # first treatment
-    if(num == 1) {
-      choices1 <- c('IV methylprednisolone (30mg twice daily)', 'upadacitinib (30mg twice daily)', 'IV methylprednisolone (30mg twice daily) + upadacitinib (45mg daily)')
-      sample(choices1, 1)
-    # second treatment (depends on first treatment)
-    } else {
-      if(treat1 == 'IV methylprednisolone (30mg twice daily)') {
-        choices2 <- c('add oyolosporin rescue', 'add upa 30mg BID rescue')
-        sample(choices2, 1)
-      } else if (treat1 == 'upadacitinib (30mg twice daily)') {
-        choices2 <- c('switch to IV methylprednisolone 30 mg BID + cycloxporine', 'add IV methylprednisolone 30mg BID')
-        sample(choices2, 1)
-      } else {
-        choices2 <- c('increase upa to 30mg BID', 'switch to oyolosporin rescue')
-        sample(choices2, 1)
-      }
-    }
-  }
   
   ## collect results of randomization
   ## --------------------------------
@@ -118,16 +97,27 @@ library(googlesheets4)
     titlePanel('Treatment Assignment'),
     # sidebar
     sidebarLayout(
-      # randomizer
+      # randomization
       sidebarPanel(
-        title = 'Inputs',
-        textInput(inputId = 'patient_id', label = 'Patient ID'),
-        selectInput('treatment_num', 'Treatment Number', choices = c('Not Selected' = 0, 'First' = 1, 'Second' = 2)),
-        actionButton('submit', 'Submit')),
+        title = 'Randomization Inputs',
+        textInput(
+          inputId = 'patient_id', 
+          label = 'Patient ID'
+        ),
+        selectInput(
+          inputId = 'treatment_num', 
+          label = 'Treatment Number', 
+          choices = c('Not Selected' = 0, 'First' = 1, 'Second' = 2)
+        ),
+        actionButton(
+          inputId = 'submit', 
+          label = 'Submit')
+      ), 
       # show current data
       mainPanel(
         DT::dataTableOutput('responses'), 
-        tags$a(href="https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0", "Access data")
+        tags$a(href="https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0", "Access data"), 
+        DT::dataTableOutput('data')
       )
     )
   )
@@ -135,7 +125,40 @@ library(googlesheets4)
   
   ## Page 2: Medication Tracker
   ## --------------------------
-
+  
+  med_page <- tabPanel(
+    # titles
+    title = 'Medications', 
+    titlePanel('Medication Tracker'), 
+    # sidebar
+    sidebarLayout(
+      sidebarPanel(
+        title = 'Medication Inputs', 
+        textInput(
+          'med_patient_id',       # input id
+          'Patient ID'            # label
+        ), 
+        selectInput(
+          'med_treatment_stage',  # input id
+          'Treatment Stage',      # label
+          choices = c('Not Selected' = 0, 'First' = 1, 'Second' = 2)
+        ), 
+        dateInput(
+          'med_date', 
+          'Treatment Date'
+        ),
+        timeInput(
+          'med_time', 
+          'Treatment Time'
+        ), 
+        actionButton(
+          'med_submit',           # input id
+          'Submit'                # label
+        )
+      ), 
+      mainPanel()
+    )
+  )
 
   ## Page 3: Dashboard Guide
   ## ------------------------
@@ -154,6 +177,7 @@ library(googlesheets4)
 
 ui <- navbarPage('Clinical Trial Dashboard',
   treat_page,
+  med_page, 
   about_page,
   theme = shinytheme(theme = 'flatly')
 )
@@ -190,8 +214,10 @@ server <- function(input, output, session) {
     # Show the previous responses, updated with current
     output$responses <- DT::renderDataTable({
       input$submit
-      loadData(treatment_sheet)
+      data.frame(loadData(treatment_sheet)) %>% select(-assignment_time)
     })
+    
+    output$data <- DT::renderDataTable({treatmentData})
     
   ## medications (tab 2)
   ## -------------------

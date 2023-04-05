@@ -33,23 +33,7 @@ source('treatment_assignment.R')
 
 
 
-# google sheets ---------------------------------------------
-# ===========================================================
 
-  ## authentication
-  ## --------------
-
-  options(gargle_oauth_cache = ".secrets")
-  gs4_auth()
-  list.files(".secrets/")
-  gs4_deauth()
-  gs4_auth(cache = ".secrets", email = "tedesco1999@gmail.com")
-  
-  ## sheet IDs
-  ## --------------
-
-  treatment_sheet <- 'https://docs.google.com/spreadsheets/d/1tRd9zH0g1_igGho8kpiNyqFx0Z6b15S6sM6-HqrtPHg/edit#gid=0'
-  medication_sheet <- ''
 
   
   

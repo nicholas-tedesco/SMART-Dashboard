@@ -8,17 +8,11 @@
 
 ## goals: create application that...
 
-<<<<<<< HEAD
   # 1) Reveals patient treatment assignment
   # 2) Calculates treatment assessment times
   # 3) Visualizes assessment data
   # 4) Tracks patient enrollment
   # 5) Pulls data from REDCap
-=======
-  # 1) Reveal patient treatment assignment
-  # 2) Track medication administration (test)
-  # 3) Track symptoms, response status
->>>>>>> 6cb7e7e3f2413d144e3f53f3db5e49d90cee5529
 
 
 
@@ -86,7 +80,8 @@
         dataTableOutput('responses'), 
         tags$a(href="https://docs.google.com/spreadsheets/d/1feaiNDE7cn_yOnrLjUdxa19aw7P_vX30RNGvwzvikPs/edit?pli=1#gid=1743807854", "View all assignments")
       )
-    )
+    ), 
+    br('')
   )
   
   
@@ -184,11 +179,15 @@ server <- function(input, output, session) {
     
 }
 
+  
     
 # run application --------------------------------------------
 # ============================================================
 
 shinyApp(ui = ui, server = server)
+  
+  
+  
   
 # references -------------------------------------------------
 # ============================================================

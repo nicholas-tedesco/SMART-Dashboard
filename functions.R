@@ -19,6 +19,22 @@ library(dplyr)
 
 
 
+# home page --------------------------------------------------
+# ============================================================
+
+
+tab_voronoys <- function(texto, cor){
+  HTML(paste0('<a href="#" class="action-button">
+                  <div class = "voronoys-block" style = "background-color:', cor, ';"> 
+                  <span class = "name">', texto, '</span>
+                  <div class="img_block">
+                    <div class="img_block_conteiner">
+                    </div>
+                  </div>
+              </div></a>'))
+}
+
+
 # helper functions -------------------------------------------
 # ============================================================
 
@@ -36,7 +52,7 @@ library(dplyr)
     } else {
       row <- data.frame(treatmentData %>% filter(patient_id == id))
       # set second treatment to 'hidden' to hide contents
-      row$treatment_two <- 'hidden'   
+      row$treatment_two <- '[hidden]'   
     }
     
     # get time to sort by most recent reveal
@@ -45,8 +61,6 @@ library(dplyr)
     return(row)
     
   }
-
-  overwrite_row <- function() {}
 
   ## google sheets, save and load data
   ## ------------------
@@ -66,7 +80,7 @@ library(dplyr)
   ## organize treatment data
   ## -----------------------
   
-  orgData <- function(data) {
+  treat_toDF <- function(data) {
     
     # README ----
     # purpose: retrieve most recent treatment row for each patient id, sort results by date
@@ -80,6 +94,31 @@ library(dplyr)
       select(-assignment_time)
     
     return(data)
+    
+  }
+  
+  ## organize assessment data
+  ## ------------------------
+  
+  assess_toDF <- function(assessData) {
+    
+    # README ----
+    # purpose: calculate assessment times based on medication start
+    # inputs: dataframe including patient id (patient_id), medication start time (start_time)
+    
+    current_time = Sys.time()
+    
+    assessData <- assessData %>%
+      mutate(
+        day_one = start_time + 24 * 60 * 60, 
+        day_two = start_time + 48 * 60 * 60, 
+        day_three = start_time + 72 * 60 * 60, 
+        time_until_day_one = difftime(day_one, current_time, units = 'hours'), 
+        time_until_day_two = difftime(day_two, current_time, units = 'hours'), 
+        time_until_day_three = difftime(day_three, current_time, units = 'hours')
+      )
+    
+    return(assessData)
     
   }
   

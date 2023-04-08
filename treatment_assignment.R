@@ -90,6 +90,23 @@ treatmentData <- assign_patients(62)
 
 write.csv(treatmentData, 'treatmentData.csv')
 
+
+
+# test data for medications -----------------------------------
+# =============================================================
+
+datetime_sequence <- seq(
+  as.POSIXct('2023/04/03'),  # Create sequence of dates
+  as.POSIXct('2023/04/07'),
+  by = "10 mins")
+
+start_times <- sample(datetime_sequence, 62)
+
+assessData <- data.frame(
+  patient_id = 1:62, 
+  start_time = start_times
+)
+
   
   
   

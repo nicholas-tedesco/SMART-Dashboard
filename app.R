@@ -9,7 +9,7 @@
 ## goals:
 
   # 1) Reveal patient treatment assignment
-  # 2) Track medication administration
+  # 2) Track medication administration (test)
   # 3) Track symptoms, response status
 
 

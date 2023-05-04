@@ -60,6 +60,7 @@ source('functions.R')
   
   ## treatment distribution ----
   
+  set.seed(66123)
   test_treatment <- assign_patients(45)
   
   ## enrollment ----

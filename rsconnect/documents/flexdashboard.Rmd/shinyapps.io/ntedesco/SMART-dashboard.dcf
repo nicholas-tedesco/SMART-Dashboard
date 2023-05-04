@@ -1,0 +1,13 @@
+name: SMART-dashboard
+title: SMART-dashboard
+username:
+account: ntedesco
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9020897
+bundleId: 7171418
+url: https://ntedesco.shinyapps.io/SMART-dashboard/
+when: 1683158258.6242
+lastSyncTime: 1683158258.62422
+asMultiple: FALSE
+asStatic: FALSE

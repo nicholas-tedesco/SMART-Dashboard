@@ -1,0 +1,341 @@
+---
+title: "SMART Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+    theme: cosmo
+    logo: michigan-logo.png
+    favicon: michigan-logo.png
+vertical_layout: fill
+runtime: shiny
+---
+
+<style>
+.navbar-logo.pull-left {
+  padding-top:4px;
+}
+.navbar {
+  background-color:#003D79;
+  border-color:white;
+}
+.navbar-brand {
+color:white!important;
+}
+</style>   
+
+<style type="text/css">
+
+.chart-title {  /* chart_title  */
+   font-size: 15px
+
+</style>
+
+```{r setup, include=FALSE}
+# packages
+library(flexdashboard)
+library(shiny)
+library(plotly)
+library(ggiraph)
+library(ggiraphExtra)
+library(RColorBrewer)
+library(stringr)
+library(shinythemes)
+library(shinyTime)
+library(DT)
+library(data.table)
+
+# data and functions
+source('redcap-data.R')
+source('functions.R')
+
+```
+
+Screening
+========================================================================
+
+Row {data-height=30%}
+------------------------------------------------------------------------
+
+### Cumulative Enrollment as of `r format(Sys.Date(), "%B %d, %Y")` {data-width=33.3%}
+
+```{r}
+
+gauge(
+  value = test_enrolledCount, 
+  min = 0, 
+  max = 62, 
+  label = 'patients'
+)
+
+```
+
+### Excluded due to Eligibility {data-width=33.3%}
+
+```{r}
+
+valueBox(
+  value = sprintf('%i (%.0f%%)', test_excludedEligibility, test_excludedEligibilityRate * 100),
+  caption = 'excluded due to eligibility', 
+  color = 'orange', 
+  icon = 'ion-ios-flag'
+)
+
+```
+
+### Excluded due to Informed Consent {data-width=33.3%}
+
+```{r}
+
+valueBox(
+  value = sprintf('%i (%.0f%%)', test_excludedIC, test_excludedICRate * 100),
+  caption = 'refused informed consent', 
+  color = 'orange', 
+  icon = 'ion-android-clipboard'
+)
+
+```
+
+Row {data-height=33.3%}
+------------------------------------------------------------------------
+
+```{r}
+
+
+
+```
+
+Row {data-height=33.3%}
+------------------------------------------------------------------------
+
+Treatment Assignment
+========================================================================
+
+### Patient Assignment 
+
+```{r}
+
+assign_ui <- fluidPage(
+  br(''), 
+  # sidebar
+  sidebarLayout(
+    # randomization
+    sidebarPanel(
+      title = 'Inputs',
+      textInput(
+        inputId = 'patient_id', 
+        label = 'Patient ID'
+      ),
+      checkboxInput(
+        inputId = 'second_treatment', 
+        label = 'Stage 2', 
+      ), 
+      actionButton(
+        inputId = 'submit', 
+        label = 'Show Assignment')
+    ), 
+    # show current data
+    mainPanel(
+      dataTableOutput('responses')
+    )
+  )
+)
+
+assign_server <- function(input, output, session) {
+  
+  # input
+  id <- eventReactive(input$submit, input$patient_id)
+  treat2 <- eventReactive(input$submit, input$second_treatment)
+  
+  # retrieve row of interest
+  getRow <- reactive({
+    reveal_row(id(), treat2())
+  })
+  
+  # save row to output
+  output$responses <- renderDataTable(
+    {input$submit
+    datatable(
+      getRow(), 
+      colnames = c('ID', 'Stage 1', 'Stage 2'), 
+      rownames = FALSE, 
+      options = list(
+        paging = FALSE, 
+        dom = 't'
+      )
+    )}
+  )
+
+}
+
+shinyApp(
+  ui = assign_ui, 
+  server = assign_server
+)
+
+```
+
+### Treatment Distribution as of `r format(Sys.Date(), "%B %d, %Y")`
+
+```{r}
+
+test <- test_treatment %>%
+  mutate(
+    treatment_one = case_when(
+      treatment_one == 'Upadacitinib 30mg BID' ~ 'Upa', 
+      treatment_one == 'IV Methylprednisolone 30mg BID + Upadacitinib 45mg daily' ~ 'Methylpred + Upa', 
+      treatment_one == 'IV Methylprednisolone 30mg BID' ~ 'Methylpred'
+    ), 
+    treatment_two = case_when(
+      treatment_two == 'Add IV Methylprednisolone 30mg BID' ~ 'Add Methylpred', 
+      treatment_two == 'Add Upadacitinib 30mg BID Rescue' ~ 'Add Upa', 
+      treatment_two == 'Escalate to IV Methylprednisolone 30mg BID + Upadacitinib 30mg BID' ~ 'Escalate', 
+      treatment_two == 'Add Cyclosporine Rescue' ~ 'Add Cyclo', 
+      treatment_two == 'Switch to Cyclosporine Rescue' ~ 'Switch to Cyclo', 
+      treatment_two == 'Switch to IV Methylprednisolone 30mg BID + Cyclosporine' ~ 'Switch to Methylpred + Cyclo'
+    ), 
+    treatment_two = str_wrap(treatment_two, 15)
+  )
+
+treatment_plot <- ggPieDonut(
+    data = test, 
+    mapping = aes(pies = treatment_one, donuts = treatment_two), 
+    labelposition = 1
+  )
+
+ggiraph(code = print(treatment_plot))
+
+```
+
+Assessment Times
+========================================================================
+
+### Scheduled Date and Time of Patient Assessments
+
+```{r}
+
+assess_table <- datatable(
+      assess_toDF(assessData), 
+      rownames = FALSE, 
+      colnames = c('ID', 'Treatment Start Time', '24 Hours', '48 Hours', '72 Hours'), 
+      options = list(
+        dom = 'ft', 
+        columnDefs = list(list(visible=FALSE, targets=c(5:7))), 
+        pageLength = 1000
+      )
+    ) %>% 
+    formatDate(~start_time + day_one + day_two + day_three, method = 'toLocaleString') %>%
+    formatStyle(
+      'day_one', 
+      'time_until_day_one', 
+      backgroundColor = styleInterval(c(-6, 6), c('white', 'red', 'white'))
+    ) %>% 
+    formatStyle(
+      'day_two',
+      'time_until_day_two', 
+      backgroundColor = styleInterval(c(-6, 6), c('white', 'red', 'white'))
+    ) %>%
+    formatStyle(
+      'day_three', 
+      'time_until_day_three', 
+      backgroundColor = styleInterval(c(-6, 6), c('white', 'red', 'white'))
+    )
+
+renderDataTable(assess_table)
+
+```
+
+Results Summary
+========================================================================
+
+Row
+------------------------------------------------------------------------
+
+### Symptom Tracker
+
+```{r}
+
+symptom_plot1 <- snr %>%
+  filter(stage == 1) %>%
+  group_by(treatment) %>%
+  summarize(
+    day1 = mean(day1), 
+    day2 = mean(day2), 
+    day3 = mean(day3)
+  ) %>%
+  pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
+  ggplot(aes(x = time, y = CRP, group = treatment, color = treatment)) + 
+  geom_line() + 
+  geom_point() + 
+  theme_bw() + 
+  theme(
+    legend.position = 'bottom'
+  )
+
+symptom_plot2 <- snr %>%
+  filter(stage == 2) %>%
+  group_by(treatment) %>%
+  summarize(
+    day1 = mean(day1), 
+    day2 = mean(day2), 
+    day3 = mean(day3)
+  ) %>%
+  pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
+  ggplot(aes(x = time, y = CRP, group = treatment, color = treatment)) + 
+  geom_line() + 
+  geom_point() + 
+  theme_bw() + 
+  theme(
+    legend.position = 'bottom'
+  )
+
+ggplotly(subplot(symptom_plot1, symptom_plot2, nrows = 1))
+
+```
+
+Row
+------------------------------------------------------------------------
+
+### Response Rate by Treatment {data-width=30%}
+
+```{r}
+
+treatment_plot <- ggPieDonut(
+    data = test_treatment, 
+    mapping = aes(pies = treatment_one, donuts = treatment_two), 
+    labelposition = 1
+  )
+
+ggiraph(code = print(treatment_plot), height_svg = 4)
+
+```
+
+### Response Distribution by Treatment {data-width=70%}
+
+```{r}
+
+response_table <- snr %>%
+    select(PatientID, stage, treatment, response) %>%
+    filter(stage == 1) %>%
+    group_by(treatment) %>%
+    summarize(
+      responders = sum(response == 'Y'), 
+      non_responders = sum(response == 'N'), 
+      in_progress = sum(response == 'U'), 
+      total = n(), 
+      response_rate = round(responders/total*100, 2)
+    )
+
+renderDataTable(
+  response_table, 
+  options = list(
+    paging = FALSE, 
+    searching = FALSE
+  )
+)
+
+```
+
+About
+========================================================================
+

@@ -1,45 +1,151 @@
-# README ----------------------------------------------------
-# ===========================================================
+# README -----------------------------------------------------------------
+# ========================================================================
 
-## functions.R
+# functions.R
+# purpose: create functions for dashboard and helper files
 
-## init NT 04/05/2023
-## updated NT 04/05/2023
+# init NT 04/05/2023
+# updated NT 04/12/2023
 
-## goals:
+# notes
 
-  # 1) Create helper functions for dashboard to reference
+  # working on functions for REDCap data pull
+  # functions for home page? do we even need home page? (guide at the very least)
 
 
 
-# packages ---------------------------------------------------
-# ============================================================
+# packages ---------------------------------------------------------------
+# ========================================================================
 
 library(dplyr)
+library(httr)
+library(tidyverse)
+library(lubridate)
 
 
 
-# home page --------------------------------------------------
-# ============================================================
+# google sheets ----------------------------------------------
+# ------------------------------------------------------------
 
+saveData <- function(data, SHEET_ID) {
+  # have to convert to dataframe
+  data <- data %>% as.list() %>% data.frame()
+  # add to sheet
+  sheet_append(SHEET_ID, data)
+}
 
-tab_voronoys <- function(texto, cor){
-  HTML(paste0('<a href="#" class="action-button">
-                  <div class = "voronoys-block" style = "background-color:', cor, ';"> 
-                  <span class = "name">', texto, '</span>
-                  <div class="img_block">
-                    <div class="img_block_conteiner">
-                    </div>
-                  </div>
-              </div></a>'))
+loadData <- function(SHEET_ID) {
+  # read data from sheet
+  data.frame(read_sheet(SHEET_ID))
 }
 
 
-# helper functions -------------------------------------------
-# ============================================================
 
-  ## reveal patient treatments
-  ## -------------------------
+# REDCap -----------------------------------------------------------------
+# ========================================================================
+
+  ## retrieve data from REDCap ---------------------------------
+  ## -----------------------------------------------------------
+
+  get_rc <- function(form_id) {
+    
+    # README ----
+    # purpose: pull data from REDCap using csv parameters, API url/token, and form_id
+    # inputs:  form_id (ex: 'demographics')
+    
+    if(length(form_id) == 1){
+      formData = list(
+        token = custom_token, 
+        content='record',
+        action='export',
+        format='csv',
+        type='flat',
+        csvDelimiter='',
+        rawOrLabel='raw',
+        rawOrLabelHeaders='raw',
+        exportCheckboxLabel='false',
+        exportSurveyFields='false',
+        exportDataAccessGroups='false',
+        returnFormat='csv', 
+        'forms[0]' = form_id
+      )
+    } else if (length(form_id) == 2){
+      formData = list(
+        token = custom_token, 
+        content='record',
+        action='export',
+        format='csv',
+        type='flat',
+        csvDelimiter='',
+        rawOrLabel='raw',
+        rawOrLabelHeaders='raw',
+        exportCheckboxLabel='false',
+        exportSurveyFields='false',
+        exportDataAccessGroups='false',
+        returnFormat='csv', 
+        'forms[0]' = form_id[1], 
+        'forms[1]' = form_id[2]
+      )
+    } else if(length(form_id) > 2){
+      return('Error: form_id can only have up to two elements')
+    }
+    
+    # retrieve response to API request
+    response <- POST(
+      url = custom_url, 
+      body = formData
+    )
+    
+    # obtain result from response
+    result <- content(response)
+    
+    # output
+    return(result)
+    
+  }
+  
+
+
+# treatment assignment ---------------------------------------
+# ------------------------------------------------------------
+  
+  ## assignment ----
+  
+  stage1 <- function() {
+    
+    # README ----
+    # purpose of function is to assign patient to first stage of treatment
+    
+    # treatment stage 1 options
+    treatments <- c('IV Methylprednisolone 30mg BID', 'Upadacitinib 30mg BID', 'IV Methylprednisolone 30mg BID + Upadacitinib 45mg daily')
+    
+    # random assignment
+    sample(treatments, 1)
+    
+  }
+  
+  stage2 <- function(treat1) {
+    
+    # README ----
+    # purpose of function is to assign patient to second stage of treatment, given first treatment as input
+    
+    # treatment stage 2 options (dependent on first stage)
+    treatments <- c()
+    
+    if(treat1 == 'IV Methylprednisolone 30mg BID') {
+      treatments <- c('Add Cyclosporine Rescue', 'Add Upadacitinib 30mg BID Rescue')
+    } else if (treat1 == 'Upadacitinib 30mg BID') {
+      treatments <- c('Switch to IV Methylprednisolone 30mg BID + Cyclosporine', 'Add IV Methylprednisolone 30mg BID')
+    } else {
+      treatments <- c('Escalate to IV Methylprednisolone 30mg BID + Upadacitinib 30mg BID', 'Switch to Cyclosporine Rescue')
+    }
+    
+    # random assignment
+    sample(treatments, 1)
+    
+  }
+
+  ## reveal patient treatments ----
 
   reveal_row <- function(id, treat2) {
     
@@ -55,30 +161,11 @@ tab_voronoys <- function(texto, cor){
       row$treatment_two <- '[hidden]'   
     }
     
-    # get time to sort by most recent reveal
-    row$assignment_time <- Sys.time()
-    
     return(row)
     
   }
-
-  ## google sheets, save and load data
-  ## ------------------
-
-  saveData <- function(data, SHEET_ID) {
-    # have to convert to dataframe
-    data <- data %>% as.list() %>% data.frame()
-    # add to sheet
-    sheet_append(SHEET_ID, data)
-  }
-
-  loadData <- function(SHEET_ID) {
-    # read data from sheet
-    data.frame(read_sheet(SHEET_ID))
-  }
   
-  ## organize treatment data
-  ## -----------------------
+  ## organize treatment data ----
   
   treat_toDF <- function(data) {
     
@@ -97,8 +184,27 @@ tab_voronoys <- function(texto, cor){
     
   }
   
-  ## organize assessment data
-  ## ------------------------
+  assign_patients <- function(cohort_size) {
+    
+    # README ----
+    # purpose of function is to generate treatment dataset (including stages 1 and 2) for given 
+    # cohort size of patients
+    
+    data <- data.frame(patient_id = 1:cohort_size) %>%
+      rowwise() %>%
+      mutate(
+        treatment_one = stage1(), 
+        treatment_two = stage2(treatment_one)
+      )
+    
+  }
+  
+  
+
+# assessment -------------------------------------------------
+# ------------------------------------------------------------
+  
+  ## organize assessment data ----
   
   assess_toDF <- function(assessData) {
     
@@ -121,5 +227,6 @@ tab_voronoys <- function(texto, cor){
     return(assessData)
     
   }
+
   
   

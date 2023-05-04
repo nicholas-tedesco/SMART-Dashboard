@@ -74,10 +74,21 @@ source('functions.R')
   test_excludedEligibilityRate <- test_excludedEligibility / test_totalScreened
   test_excludedICRate <- test_excludedIC / test_totalScreened
   
-  exclusionReasons <- data.frame(
-    reason = c('Reason 1', 'Reason 2', 'Reason 3', 'Reason 4', 'Reason 5', 'Other'), 
-    count = c(4, 14, 20, 32, 5, 3)
+  test_exclusionData <- data.frame(
+    reason = c('Reason 1', 'Reason 2', 'Reason 3', 'Reason 4', 'Reason 5', 'Other'),
+    reason_class = c('Class 1', 'Class 2', 'Class 3', 'Class 2', 'Class 1', 'Class 2'), 
+    count = c(4, 14, 20, 32, 5, 10)
   )
+  
+  test_monthlyEnrollment <- data.frame(
+    month = c(rep('Jan 2023', 3), rep('Feb', 3), rep('March', 3), rep('April', 3), rep('May', 3)), 
+    type = rep(c('Screened', 'Approached', 'Enrolled'), 5), 
+    count = rpois(15, 30)
+  ) %>%
+    mutate(
+      month = factor(month, levels = c('Jan 2023', 'Feb', 'March', 'April', 'May')), 
+      type = factor(type, levels = c('Screened', 'Approached', 'Enrolled'))
+    )
   
   ## treatment ----
   set.seed(25324)             # set seed for reproducibility

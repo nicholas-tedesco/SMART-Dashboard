@@ -44,10 +44,24 @@ library(shinythemes)
 library(shinyTime)
 library(DT)
 library(data.table)
+library(highcharter)
 
 # data and functions
 source('redcap-data.R')
 source('functions.R')
+
+# variables for headings
+elig_exc_num <- sprintf(
+  '%i (%.0f%%)', 
+  test_excludedEligibility, 
+  test_excludedEligibilityRate * 100
+)
+
+ic_exc_num <- sprintf(
+  '%i (%.0f%%)', 
+  test_excludedIC, 
+  test_excludedICRate * 100
+)
 
 ```
 
@@ -57,56 +71,85 @@ Screening
 Row {data-height=30%}
 ------------------------------------------------------------------------
 
-### Cumulative Enrollment as of `r format(Sys.Date(), "%B %d, %Y")` {data-width=33.3%}
+### Enrolled
 
 ```{r}
 
-gauge(
-  value = test_enrolledCount, 
-  min = 0, 
-  max = 62, 
-  label = 'patients'
+valueBox(
+  value = sprintf('%i (%.0f%%)', test_enrolledCount, test_enrolledRate * 100), 
+  caption = sprintf('enrolled as of %s', format(Sys.Date(), '%B %d, %Y')), 
+  color = 'lightgreen', 
+  icon = 'ion-android-checkbox-outline'
 )
 
 ```
 
-### Excluded due to Eligibility {data-width=33.3%}
+### Exclusions due to Eligibility
 
 ```{r}
 
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedEligibility, test_excludedEligibilityRate * 100),
-  caption = 'excluded due to eligibility', 
+  caption = 'excluded due to eligilibity requirements', 
   color = 'orange', 
   icon = 'ion-ios-flag'
 )
-
+  
 ```
 
-### Excluded due to Informed Consent {data-width=33.3%}
+### Exclusions due to Informed Consent Refusal
 
 ```{r}
 
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedIC, test_excludedICRate * 100),
   caption = 'refused informed consent', 
-  color = 'orange', 
+  color = '#F25C55', 
   icon = 'ion-android-clipboard'
+)
+  
+```
+
+Row {data-height=70%}
+------------------------------------------------------------------------
+
+### Reasons for Exclusion {data-width=50%}
+
+```{r}
+
+tm_data <- data_to_hierarchical(
+  data = test_exclusionData, 
+  group_vars = c(reason_class, reason), 
+  size_var = count, 
+  colors = brewer.pal(n = 8, name = 'Dark2')
+)
+
+hchart(
+  tm_data, 
+  type = 'treemap'
 )
 
 ```
 
-Row {data-height=33.3%}
-------------------------------------------------------------------------
+### Patient Screening and Enrollment by Month {data-width=50%}
 
 ```{r}
 
+enrollment_plot <- ggplot(data = test_monthlyEnrollment) + 
+  geom_bar(aes(x = month, y = count, group = type, fill = type), 
+           stat = 'identity', 
+           position = position_dodge(0.9), 
+           color = 'black'
+  ) + 
+  xlab('') + ylab('') + 
+  theme_bw() + 
+  theme(
+    legend.position = 'none'
+  )
 
+ggplotly(enrollment_plot)
 
 ```
-
-Row {data-height=33.3%}
-------------------------------------------------------------------------
 
 Treatment Assignment
 ========================================================================
@@ -197,7 +240,7 @@ test <- test_treatment %>%
     treatment_two = str_wrap(treatment_two, 15)
   )
 
-treatment_plot <- ggPieDonut(
+treatment_plot <- custom_ggPieDonut(
     data = test, 
     mapping = aes(pies = treatment_one, donuts = treatment_two), 
     labelposition = 1
@@ -300,10 +343,11 @@ Row
 
 ```{r}
 
-treatment_plot <- ggPieDonut(
+treatment_plot <- custom_ggPieDonut(
     data = test_treatment, 
     mapping = aes(pies = treatment_one, donuts = treatment_two), 
-    labelposition = 1
+    labelposition = 1, 
+    palette = 'Set 1'
   )
 
 ggiraph(code = print(treatment_plot), height_svg = 4)
@@ -335,7 +379,4 @@ renderDataTable(
 )
 
 ```
-
-About
-========================================================================
 

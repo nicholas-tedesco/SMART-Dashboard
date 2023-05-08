@@ -45,27 +45,20 @@ library(shinyTime)
 library(DT)
 library(data.table)
 library(highcharter)
+library(waffle)
 
 # data and functions
 source('redcap-data.R')
 source('functions.R')
 
-# variables for headings
-elig_exc_num <- sprintf(
-  '%i (%.0f%%)', 
-  test_excludedEligibility, 
-  test_excludedEligibilityRate * 100
-)
-
-ic_exc_num <- sprintf(
-  '%i (%.0f%%)', 
-  test_excludedIC, 
-  test_excludedICRate * 100
-)
-
+# colors
+mygreen <- '#4DAF4A'
+myred <- '#E41A1C'
+myorange <- '#FF7F00'
+myblue <- '#377EB8'
 ```
 
-Screening
+Screening & Enrollment
 ========================================================================
 
 Row {data-height=30%}
@@ -78,7 +71,7 @@ Row {data-height=30%}
 valueBox(
   value = sprintf('%i (%.0f%%)', test_enrolledCount, test_enrolledRate * 100), 
   caption = sprintf('enrolled as of %s', format(Sys.Date(), '%B %d, %Y')), 
-  color = 'lightgreen', 
+  color = mygreen, 
   icon = 'ion-android-checkbox-outline'
 )
 
@@ -91,7 +84,7 @@ valueBox(
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedEligibility, test_excludedEligibilityRate * 100),
   caption = 'excluded due to eligilibity requirements', 
-  color = 'orange', 
+  color = myorange, 
   icon = 'ion-ios-flag'
 )
   
@@ -104,7 +97,7 @@ valueBox(
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedIC, test_excludedICRate * 100),
   caption = 'refused informed consent', 
-  color = '#F25C55', 
+  color = myred, 
   icon = 'ion-android-clipboard'
 )
   
@@ -121,7 +114,7 @@ tm_data <- data_to_hierarchical(
   data = test_exclusionData, 
   group_vars = c(reason_class, reason), 
   size_var = count, 
-  colors = brewer.pal(n = 8, name = 'Dark2')
+  colors = rev(brewer.pal(n = 6, name = 'Blues'))
 )
 
 hchart(
@@ -131,7 +124,7 @@ hchart(
 
 ```
 
-### Patient Screening and Enrollment by Month {data-width=50%}
+### Patient Enrollment by Month {data-width=50%}
 
 ```{r}
 
@@ -141,6 +134,7 @@ enrollment_plot <- ggplot(data = test_monthlyEnrollment) +
            position = position_dodge(0.9), 
            color = 'black'
   ) + 
+  scale_fill_manual(values = c(myred, myblue, mygreen)) + 
   xlab('') + ylab('') + 
   theme_bw() + 
   theme(
@@ -243,7 +237,8 @@ test <- test_treatment %>%
 treatment_plot <- custom_ggPieDonut(
     data = test, 
     mapping = aes(pies = treatment_one, donuts = treatment_two), 
-    labelposition = 1
+    labelposition = 1, 
+    palette = 'Set 1'
   )
 
 ggiraph(code = print(treatment_plot))
@@ -288,95 +283,104 @@ renderDataTable(assess_table)
 
 ```
 
-Results Summary
+Results
 ========================================================================
 
 Row
 ------------------------------------------------------------------------
 
-### Symptom Tracker
+### CRP Tracker
 
 ```{r}
-
-symptom_plot1 <- snr %>%
-  filter(stage == 1) %>%
-  group_by(treatment) %>%
-  summarize(
-    day1 = mean(day1), 
-    day2 = mean(day2), 
-    day3 = mean(day3)
-  ) %>%
+    
+symptom_plot <- test_snr %>%
   pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
-  ggplot(aes(x = time, y = CRP, group = treatment, color = treatment)) + 
+  mutate(
+    stage = ifelse(stage == 1, 'Stage 1', 'Stage 2'), 
+    time = case_when(
+      time == 'day0' ~ 'Day 0',
+      time == 'day1' ~ 'Day 1', 
+      time == 'day2' ~ 'Day 2', 
+      time == 'day3' ~ 'Day 3'
+    )
+  ) %>%
+  ggplot(aes(x = time, y = CRP, group = PatientID, color = as.factor(PatientID))) + 
+  facet_wrap(~as.factor(stage)) + 
   geom_line() + 
   geom_point() + 
+  scale_y_continuous(breaks = c(2.5, 5, 7.5, 10, 12.5)) + 
   theme_bw() + 
-  theme(
-    legend.position = 'bottom'
-  )
+  labs(color = 'Patient ID') + 
+  xlab('')
 
-symptom_plot2 <- snr %>%
-  filter(stage == 2) %>%
-  group_by(treatment) %>%
-  summarize(
-    day1 = mean(day1), 
-    day2 = mean(day2), 
-    day3 = mean(day3)
-  ) %>%
-  pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
-  ggplot(aes(x = time, y = CRP, group = treatment, color = treatment)) + 
-  geom_line() + 
-  geom_point() + 
-  theme_bw() + 
-  theme(
-    legend.position = 'bottom'
-  )
+gg <- ggplotly(symptom_plot)
 
-ggplotly(subplot(symptom_plot1, symptom_plot2, nrows = 1))
+gg <- plotly_build(gg) 
+
+for(i in 3:nrow(test_snr)){
+  gg$x$data[[i]]$visible <- 'legendonly'
+}
+
+gg
+    
 
 ```
 
 Row
 ------------------------------------------------------------------------
 
-### Response Rate by Treatment {data-width=30%}
+### Treatment Outcomes {data-width=60%}
 
 ```{r}
 
-treatment_plot <- custom_ggPieDonut(
-    data = test_treatment, 
-    mapping = aes(pies = treatment_one, donuts = treatment_two), 
-    labelposition = 1, 
-    palette = 'Set 1'
-  )
-
-ggiraph(code = print(treatment_plot), height_svg = 4)
-
-```
-
-### Response Distribution by Treatment {data-width=70%}
-
-```{r}
-
-response_table <- snr %>%
+response_table <- test_snr %>%
     select(PatientID, stage, treatment, response) %>%
     filter(stage == 1) %>%
     group_by(treatment) %>%
     summarize(
-      responders = sum(response == 'Y'), 
-      non_responders = sum(response == 'N'), 
-      in_progress = sum(response == 'U'), 
-      total = n(), 
-      response_rate = round(responders/total*100, 2)
-    )
+      Responders = sum(response == 'Y'), 
+      'Non-Responders' = sum(response == 'N'), 
+      'In-Progress' = sum(response == 'U'), 
+      Total = n(), 
+      'Response Rate' = round(Responders/Total*100, 2)
+    ) %>%
+  rename(Treatment = treatment)
 
 renderDataTable(
   response_table, 
+  rownames = FALSE, 
   options = list(
     paging = FALSE, 
-    searching = FALSE
+    searching = FALSE, 
+    dom = 't'
   )
 )
+
+```
+
+### Stage 1 Summary {data-width=20%}
+
+```{r}
+
+hchart(
+  test_responseData1, 
+  type = 'item', 
+  hcaes(name = response_status, y = value)
+) %>%
+  hc_colors(colors = c('lightgreen', 'skyblue', 'red'))
+
+```
+
+### Stage 2 Summary {data-width=20%}
+
+```{r}
+
+hchart(
+  test_responseData2, 
+  type = 'item', 
+  hcaes(name = response_status, y = value)
+) %>%
+  hc_colors(colors = c('lightgreen', 'skyblue', 'red'))
 
 ```
 

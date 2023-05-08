@@ -22,6 +22,12 @@ library(httr)
 library(tidyverse)
 library(lubridate)
 
+library(moonBook)
+library(ggplot2)
+library(ggiraph)
+library(grDevices)
+library(sjlabelled)
+
 
 
 # google sheets ----------------------------------------------
@@ -235,9 +241,9 @@ loadData <- function(SHEET_ID) {
   ## generate symptom plot ----
   ## --------------------------
   
-  symptom_plot1 <- function(id){
+  symptom_plot <- function(id){
     
-    test_snr %>%
+    plot1 <- test_snr %>%
       filter(stage == 1) %>%
       filter(PatientID == id) %>%
       pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
@@ -248,10 +254,8 @@ loadData <- function(SHEET_ID) {
       theme(
         legend.position = 'bottom'
       )
-  }
-  
-  symptom_plot2 <- function(id){
-    test_snr %>%
+    
+    plot2 <- test_snr %>%
       filter(stage == 2) %>%
       filter(PatientID == id) %>%
       pivot_longer(cols = contains('day'), names_to = 'time', values_to = 'CRP') %>%
@@ -262,7 +266,11 @@ loadData <- function(SHEET_ID) {
       theme(
         legend.position = 'bottom'
       )
+    
+    ggplotly(subplot(plot1, plot2, nrows = 1))
+    
   }
+  
   
 # ggPieDonut change colors ----
   

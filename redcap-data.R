@@ -46,17 +46,34 @@ source('functions.R')
   
   ## symptoms and response ----
   
-  snr <- data.frame(
-    PatientID = 1:50, 
-    treatment = sample(c('Methylprednisolone', 'Cyclosporine', 'Third Med'), 50, replace = TRUE),
-    stage = sample(1:2, 50, replace = TRUE), 
-    day1 = rnorm(50, mean = 7, sd = 2), 
-    day2 = rnorm(50, mean = 7, sd = 2), 
-    day3 = rnorm(50, mean = 7, sd = 2), 
-    response = sample(c('Y', 'N', 'U'), 50, replace = TRUE)
+  test_snr <- data.frame(
+    PatientID = c(1:50, 1:50), 
+    treatment = sample(c('Methylprednisolone', 'Upadacitinib', 'Methylpred + Upa'), 100, replace = TRUE),
+    stage = c(rep(1, 50), rep(2, 50)), 
+    day0 = rnorm(100, mean = 9, sd = 1), 
+    day1 = rnorm(100, mean = 8, sd = 2), 
+    day2 = rnorm(100, mean = 7, sd = 2), 
+    day3 = rnorm(100, mean = 7, sd = 2), 
+    response = sample(c('Y', 'N', 'U'), 100, replace = TRUE)
   ) %>% mutate(
     response = factor(response, levels = c('U', 'N', 'Y'))
   )
+  
+  test_responseData1 <- data.frame(
+    response_status = c('Responder', 'In-Progress', 'Non-Responder'),
+    value = c(13, 10, 30)
+  ) %>%
+    mutate(
+      response_status = factor(response_status, levels = c('Non-Responder', 'In-Progress', 'Responder'))
+    )
+  
+  test_responseData2 <- data.frame(
+    response_status = c('Responder', 'In-Progress', 'Non-Responder'),
+    value = c(4, 18, 8)
+  ) %>%
+    mutate(
+      response_status = factor(response_status, levels = c('Non-Responder', 'In-Progress', 'Responder'))
+    )
   
   ## treatment distribution ----
   
@@ -81,12 +98,12 @@ source('functions.R')
   )
   
   test_monthlyEnrollment <- data.frame(
-    month = c(rep('Jan 2023', 3), rep('Feb', 3), rep('March', 3), rep('April', 3), rep('May', 3)), 
-    type = rep(c('Screened', 'Approached', 'Enrolled'), 5), 
-    count = rpois(15, 30)
+    month = c(rep('Jan 2023', 3), rep('Feb', 3), rep('March', 3), rep('April', 3), rep('May', 3), rep('June', 3), rep('July', 3)), 
+    type = rep(c('Screened', 'Approached', 'Enrolled'), 7), 
+    count = c(50, 13, 5, 30, 5, 3, 70, 10, 8, 40, 12, 6, 25, 6, 3, 40, 15, 10, 39, 14, 3)
   ) %>%
     mutate(
-      month = factor(month, levels = c('Jan 2023', 'Feb', 'March', 'April', 'May')), 
+      month = factor(month, levels = c('Jan 2023', 'Feb', 'March', 'April', 'May', 'June', 'July')), 
       type = factor(type, levels = c('Screened', 'Approached', 'Enrolled'))
     )
   
@@ -97,8 +114,8 @@ source('functions.R')
   ## assessment ---- 
   
   datetime_sequence <- seq(
-    as.POSIXct('2023/04/30'),  # Create sequence of dates
-    as.POSIXct('2023/05/02'),
+    as.POSIXct('2023/05/05'),  # Create sequence of dates
+    as.POSIXct('2023/05/09'),
     by = "10 mins")
   
   start_times <- sample(datetime_sequence, 62)

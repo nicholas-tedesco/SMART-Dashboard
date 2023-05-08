@@ -50,12 +50,6 @@ library(waffle)
 # data and functions
 source('redcap-data.R')
 source('functions.R')
-
-# colors
-mygreen <- '#4DAF4A'
-myred <- '#E41A1C'
-myorange <- '#FF7F00'
-myblue <- '#377EB8'
 ```
 
 Screening & Enrollment
@@ -71,7 +65,7 @@ Row {data-height=30%}
 valueBox(
   value = sprintf('%i (%.0f%%)', test_enrolledCount, test_enrolledRate * 100), 
   caption = sprintf('enrolled as of %s', format(Sys.Date(), '%B %d, %Y')), 
-  color = mygreen, 
+  color = 'lightgreen', 
   icon = 'ion-android-checkbox-outline'
 )
 
@@ -84,7 +78,7 @@ valueBox(
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedEligibility, test_excludedEligibilityRate * 100),
   caption = 'excluded due to eligilibity requirements', 
-  color = myorange, 
+  color = 'orange', 
   icon = 'ion-ios-flag'
 )
   
@@ -97,7 +91,7 @@ valueBox(
 valueBox(
   value = sprintf('%i (%.0f%%)', test_excludedIC, test_excludedICRate * 100),
   caption = 'refused informed consent', 
-  color = myred, 
+  color = 'orange', 
   icon = 'ion-android-clipboard'
 )
   
@@ -128,20 +122,20 @@ hchart(
 
 ```{r}
 
-enrollment_plot <- ggplot(data = test_monthlyEnrollment) + 
-  geom_bar(aes(x = month, y = count, group = type, fill = type), 
+enrollment_plot <- ggplot(data = test_monthlyEnrollment, aes(fill = type)) + 
+  geom_bar(aes(x = month, y = count, group = type), 
            stat = 'identity', 
            position = position_dodge(0.9), 
            color = 'black'
   ) + 
-  scale_fill_manual(values = c(myred, myblue, mygreen)) + 
+  scale_fill_brewer(palette = 'Greens') + 
   xlab('') + ylab('') + 
   theme_bw() + 
   theme(
     legend.position = 'none'
   )
 
-ggplotly(enrollment_plot)
+ggplotly(enrollment_plot, tooltip = c('x', 'group', 'y'))
 
 ```
 
@@ -329,7 +323,7 @@ gg
 Row
 ------------------------------------------------------------------------
 
-### Treatment Outcomes {data-width=60%}
+### Outcomes by Treatment {data-width=60%}
 
 ```{r}
 

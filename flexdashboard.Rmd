@@ -153,13 +153,19 @@ assign_ui <- fluidPage(
     # randomization
     sidebarPanel(
       title = 'Inputs',
-      textInput(
-        inputId = 'patient_id', 
-        label = 'Patient ID'
-      ),
-      checkboxInput(
-        inputId = 'second_treatment', 
-        label = 'Stage 2', 
+      radioButtons(
+        inputId = 'stage', 
+        label = 'Stage', 
+        choices = c('Stage 1', 'Stage 2'), 
+        selected = 'Stage 1'
+      ), 
+      conditionalPanel(
+        condition = 'input.stage == "Stage 2"', 
+        radioButtons(
+          inputId = 'treat1', 
+          label = 'Stage 1 Treatment', 
+          choices = c('IV Methylprednisolone 30mg BID', 'Upadacitinib 30mg BID', 'IV Methylprednisolone 30mg BID + Upadacitinib 45mg daily')
+        )
       ), 
       actionButton(
         inputId = 'submit', 
@@ -167,7 +173,7 @@ assign_ui <- fluidPage(
     ), 
     # show current data
     mainPanel(
-      dataTableOutput('responses')
+      dataTableOutput('responses', height = '5.7em')
     )
   )
 )
@@ -175,12 +181,16 @@ assign_ui <- fluidPage(
 assign_server <- function(input, output, session) {
   
   # input
-  id <- eventReactive(input$submit, input$patient_id)
-  treat2 <- eventReactive(input$submit, input$second_treatment)
+  stage <- eventReactive(input$submit, input$stage)
+  treat1 <- eventReactive(input$submit, input$treat1)
   
   # retrieve row of interest
   getRow <- reactive({
-    reveal_row(id(), treat2())
+    if(stage() == 'Stage 1'){
+      return(data.frame('Treatment' = stage1()))
+    } else if(stage() == 'Stage 2'){
+      return(data.frame('Treatment' = stage2(treat1())))
+    }
   })
   
   # save row to output
@@ -188,7 +198,6 @@ assign_server <- function(input, output, session) {
     {input$submit
     datatable(
       getRow(), 
-      colnames = c('ID', 'Stage 1', 'Stage 2'), 
       rownames = FALSE, 
       options = list(
         paging = FALSE, 

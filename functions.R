@@ -115,7 +115,7 @@ loadData <- function(SHEET_ID) {
 # treatment assignment ---------------------------------------
 # ------------------------------------------------------------
   
-  ## assignment ----
+  ## treatment assignment ----
   
   stage1 <- function() {
     
@@ -123,7 +123,11 @@ loadData <- function(SHEET_ID) {
     # purpose of function is to assign patient to first stage of treatment
     
     # treatment stage 1 options
-    treatments <- c('IV Methylprednisolone 30mg BID', 'Upadacitinib 30mg BID', 'IV Methylprednisolone 30mg BID + Upadacitinib 45mg daily')
+    treatments <- c(
+      'IV Methylprednisolone 30mg BID', 
+      'Upadacitinib 30mg BID', 
+      'IV Methylprednisolone 30mg BID + Upadacitinib 45mg daily'
+    )
     
     # random assignment
     sample(treatments, 1)
@@ -133,60 +137,31 @@ loadData <- function(SHEET_ID) {
   stage2 <- function(treat1) {
     
     # README ----
-    # purpose of function is to assign patient to second stage of treatment, given first treatment as input
+    # purpose of function is to assign patient to second stage of treatment, 
+    # given first treatment as input
     
     # treatment stage 2 options (dependent on first stage)
     treatments <- c()
     
     if(treat1 == 'IV Methylprednisolone 30mg BID') {
-      treatments <- c('Add Cyclosporine Rescue', 'Add Upadacitinib 30mg BID Rescue')
+      treatments <- c(
+        'Add Cyclosporine Rescue', 
+        'Add Upadacitinib 30mg BID Rescue'
+      )
     } else if (treat1 == 'Upadacitinib 30mg BID') {
-      treatments <- c('Switch to IV Methylprednisolone 30mg BID + Cyclosporine', 'Add IV Methylprednisolone 30mg BID')
+      treatments <- c(
+        'Switch to IV Methylprednisolone 30mg BID + Cyclosporine', 
+        'Add IV Methylprednisolone 30mg BID'
+      )
     } else {
-      treatments <- c('Escalate to IV Methylprednisolone 30mg BID + Upadacitinib 30mg BID', 'Switch to Cyclosporine Rescue')
+      treatments <- c(
+        'Escalate to IV Methylprednisolone 30mg BID + Upadacitinib 30mg BID', 
+        'Switch to Cyclosporine Rescue'
+      )
     }
     
     # random assignment
     sample(treatments, 1)
-    
-  }
-
-  ## reveal patient treatments ----
-
-  reveal_row <- function(id, treat2) {
-    
-    # README ----
-    # purpose: reveals row for given patient
-    # inputs: patient id, T/F for reveal second treatment
-    
-    if(treat2) {
-      row <- data.frame(treatmentData %>% filter(patient_id == id))
-    } else {
-      row <- data.frame(treatmentData %>% filter(patient_id == id))
-      # set second treatment to 'hidden' to hide contents
-      row$treatment_two <- '[hidden]'   
-    }
-    
-    return(row)
-    
-  }
-  
-  ## organize treatment data ----
-  
-  treat_toDF <- function(data) {
-    
-    # README ----
-    # purpose: retrieve most recent treatment row for each patient id, sort results by date
-    # inputs: treatment data (from loadData())
-    
-    data <- data %>% 
-      group_by(patient_id) %>% 
-      slice(which.max(assignment_time)) %>%
-      ungroup() %>%
-      arrange(desc(assignment_time)) %>%
-      select(-assignment_time)
-    
-    return(data)
     
   }
   

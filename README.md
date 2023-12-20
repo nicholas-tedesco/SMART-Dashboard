@@ -11,4 +11,5 @@ Credits:
 - this project was heavily inspired by jen thompson (https://jenthompson.me/2018/02/09/flexdashboards-monitoring/); in particular, the screening & enrollment tab is very similar to hers !
 
 Screenshots: 
+![Tab 1: Screening and Enrollment](/images/snr.png)
 

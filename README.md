@@ -12,16 +12,20 @@ Credits:
 
 Screenshots: 
 
-Tab 1: Screening and Enrollment
+_Tab 1: Screening and Enrollment_
+
 ![Tab 1: Screening and Enrollment](/images/snr.png)
 
-Tab 2: Treatment Assignment
+_Tab 2: Treatment Assignment_
+
 ![Tab 2: Treatment Assignment](/images/treatment.png)
 
-Tab 3: Assessment Times
+_Tab 3: Assessment Times_
+
 ![Tab 3: Assessment Times](/images/assessment.png)
 
-Tab 4: Outcomes
+_Tab 4: Outcomes_
+
 ![Tab 4: Outcomes](/images/outcomes.png)
 
 

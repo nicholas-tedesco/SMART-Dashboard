@@ -24,7 +24,7 @@ _Tab 3: Assessment Times_
 
 ![Tab 3: Assessment Times](/images/assessment.png)
 
-_Tab 4: Outcomes_
+_Tab 4: Results_
 
 ![Tab 4: Outcomes](/images/outcomes.png)
 

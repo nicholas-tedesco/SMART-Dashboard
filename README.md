@@ -1,4 +1,4 @@
-# clinical-trial-dashboard
+# Clinical Trial Dashboard
 
 Objective: create interactive dashboard in R Shiny to keep track of clinical trial progress
 

@@ -12,7 +12,6 @@ library(grDevices)
 library(sjlabelled)
 
 
-
 # google sheets 
 
 saveData <- function(data, SHEET_ID) {
@@ -148,7 +147,6 @@ loadData <- function(SHEET_ID) {
       )
     
   }
-  
   
 
 # assessment data 

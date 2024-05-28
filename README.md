@@ -19,19 +19,19 @@ Credits:
 
 ## Demo
 
-_Tab 1: Screening and Enrollment_
+### Screening and Enrollment
 
 ![Tab 1: Screening and Enrollment](/images/snr.png)
 
-_Tab 2: Treatment Assignment_
+### Tab 2: Treatment Assignment
 
 ![Tab 2: Treatment Assignment](/images/treatment.png)
 
-_Tab 3: Assessment Times_
+### Tab 3: Assessment Times
 
 ![Tab 3: Assessment Times](/images/assessment.png)
 
-_Tab 4: Results_
+### Tab 4: Results
 
 ![Tab 4: Outcomes](/images/results.png)
 

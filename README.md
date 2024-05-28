@@ -1,4 +1,6 @@
-# Clinical Trial Dashboard
+# SMART Dashboard
+
+## Overview
 
 Objective: create interactive dashboard in R Shiny to keep track of clinical trial progress
 
@@ -15,7 +17,7 @@ Context:
 Credits: 
 - this project was heavily inspired by Jen Thompson (https://jenthompson.me/2018/02/09/flexdashboards-monitoring/); in particular, the screening & enrollment tab is very similar to hers !
 
-Screenshots: 
+## Demo
 
 _Tab 1: Screening and Enrollment_
 

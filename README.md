@@ -2,8 +2,6 @@
 
 [![My Skills](https://skillicons.dev/icons?i=r,html,css&theme=light)](https://skillicons.dev)
 
-## Overview
-
 This dashboard was created to track the results of a clinical trial. Specific functions include:
 
 - screening and enrollment: keep track of patient screening / enrollment counts, summarize exclusion reasons 

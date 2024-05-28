@@ -1,5 +1,7 @@
 # SMART Dashboard
 
+[![My Skills](https://skillicons.dev/icons?i=R,html,css&theme=light)](https://skillicons.dev)
+
 ## Overview
 
 This dashboard was created to track the results of a clinical trial at Michigan Medicine. Specific functions of the dashboard include: 

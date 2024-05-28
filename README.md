@@ -4,12 +4,12 @@
 
 ## Overview
 
-This dashboard was created to track the results of a clinical trial. Specific functions of the dashboard include: 
+This dashboard was created to track the results of a clinical trial. Specific functions include:
 
 - screening and enrollment: keep track of patient screening / enrollment counts, summarize exclusion reasons 
 - treatment assignment: randomly assign patient to certain treatment plan + visualize current treatment distribution
 - assessment times: calculate assessment times relative to treatment start; alert user of upcoming assessment by highlighting cell in red
-- results: summarize key biomarkers (ex: C-reactive protein), treatment response stats by treatment class
+- results: summarize key biomarkers (ex: C-reactive protein), calculate treatment response stats by treatment class
 
 Other Notes: 
 - all data included in this repo and within the screenshots is synthetic

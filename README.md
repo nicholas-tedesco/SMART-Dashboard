@@ -4,7 +4,7 @@
 
 ## Overview
 
-This dashboard was created to track the results of a clinical trial at Michigan Medicine. Specific functions of the dashboard include: 
+This dashboard was created to track the results of a clinical trial. Specific functions of the dashboard include: 
 
 - screening and enrollment: keep track of patient screening / enrollment counts, summarize exclusion reasons 
 - treatment assignment: randomly assign patient to certain treatment plan + visualize current treatment distribution

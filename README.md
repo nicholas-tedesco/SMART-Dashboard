@@ -1,6 +1,6 @@
 # SMART Dashboard
 
-[![My Skills](https://skillicons.dev/icons?i=R,html,css&theme=light)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=r,html,css&theme=light)](https://skillicons.dev)
 
 ## Overview
 

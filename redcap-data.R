@@ -92,7 +92,7 @@ source('functions.R')
   test_excludedICRate <- test_excludedIC / test_totalScreened
   
   test_exclusionData <- data.frame(
-    reason = c('Reason 1', 'Reason 2', 'Reason 3', 'Reason 4', 'Reason 5', 'Other'),
+    reason = c('Refused IC', 'Conflicting Condition', 'Other', 'Conflicting medication', 'Ineligible', 'Age'),
     reason_class = c('Class 1', 'Class 2', 'Class 3', 'Class 2', 'Class 1', 'Class 2'), 
     count = c(4, 14, 20, 32, 5, 10)
   )
@@ -114,8 +114,8 @@ source('functions.R')
   ## assessment ---- 
   
   datetime_sequence <- seq(
-    as.POSIXct('2023/05/05'),  # Create sequence of dates
-    as.POSIXct('2023/05/09'),
+    as.POSIXct('2023/12/18'),  # Create sequence of dates
+    as.POSIXct('2023/12/20'),
     by = "10 mins")
   
   start_times <- sample(datetime_sequence, 62)

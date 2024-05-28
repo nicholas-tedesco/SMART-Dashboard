@@ -1,5 +1,5 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-.secrets
+dashboard.Rproj
+flexdashboard.html
+redcap-data
+secret-data 
+michigan-logo

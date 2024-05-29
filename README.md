@@ -17,7 +17,7 @@ Other Notes:
 
 ### Screening and Enrollment
 
-![Tab 1: Screening and Enrollment](/images/snr.png)
+<kbd>![Tab 1: Screening and Enrollment](/images/snr.png)</kbd>
 
 ### Tab 2: Treatment Assignment
 

@@ -21,14 +21,14 @@ Other Notes:
 
 ### Tab 2: Treatment Assignment
 
-![Tab 2: Treatment Assignment](/images/treatment.png)
+<kbd>![Tab 2: Treatment Assignment](/images/treatment.png)</kbd>
 
 ### Tab 3: Assessment Times
 
-![Tab 3: Assessment Times](/images/assessment.png)
+<kbd>![Tab 3: Assessment Times](/images/assessment.png)</kbd>
 
 ### Tab 4: Results
 
-![Tab 4: Outcomes](/images/results.png)
+<kbd>![Tab 4: Outcomes](/images/results.png)</kbd>
 
 
